@@ -14,6 +14,4 @@ public interface ChatRepository extends JpaRepository<ChatEntity, UUID> {
     ChatEntity getChatById(UUID id);
     List<ChatEntity> findAllChatsByUserId(UUID userId);
     Page<ChatEntity> findAllByUserIdOrderByUpdatedAtDesc(UUID userId, Pageable pageable);
-
-    Page<MessageEntity> findAllByIdOrderByUpdatedAt(UUID chatId, Pageable pageable);
 }

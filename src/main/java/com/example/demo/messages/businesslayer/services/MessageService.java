@@ -1,85 +1,120 @@
 package com.example.demo.messages.businesslayer.services;
 
+import com.example.demo.amq.dtos.prompt.PromptMessage;
+import com.example.demo.amq.services.PromptProducer;
+import com.example.demo.messages.businesslayer.dtos.Message;
 import com.example.demo.chats.datalayer.entities.ChatEntity;
 import com.example.demo.infrastructure.errors.EntityNotFoundException;
-import com.example.demo.messages.businesslayer.MessageMapper;
-import com.example.demo.messages.businesslayer.dtos.CreateMessageRequestDto;
-import com.example.demo.messages.businesslayer.dtos.CreateMessageResponseDto;
 import com.example.demo.messages.businesslayer.dtos.MessageGetResponseDto;
 import com.example.demo.messages.datalayer.entities.MessageEntity;
+import com.example.demo.messages.datalayer.enums.SenderType;
+import com.example.demo.messages.datalayer.repositories.MessageForAgent;
 import com.example.demo.messages.datalayer.repositories.MessagesRepository;
 import com.example.demo.chats.datalayer.repositories.ChatRepository;
+import com.example.demo.globals.PageResponseDto;
+import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.UUID;
 
 
 @Service
+@RequiredArgsConstructor
 public class MessageService {
     private final MessagesRepository messagesRepository;
     private final ChatRepository chatRepository;
-    private final MessageMapper messageMapper;
-
-    public MessageService(MessagesRepository messagesRepository,  ChatRepository chatRepository, MessageMapper messageMapper) {
-        this.messagesRepository = messagesRepository;
-        this.chatRepository = chatRepository;
-        this.messageMapper = messageMapper;
-    }
-
-    private MessageGetResponseDto toDto(MessageEntity entity) {
-        return new MessageGetResponseDto(
-                entity.getId(),
-                entity.getChat().getId(),
-                entity.getContent()
-        );
-    }
-
+    private final PromptProducer  promptProducer;
 
     @Transactional
-    public CreateMessageResponseDto createMessage(UUID chatId, CreateMessageRequestDto createMessageRequestDto) {
+    public void createMessageFromClient(UUID chatId, String content) {
         ChatEntity chatEntity = chatRepository.getChatById(chatId);
 
-        if (chatEntity == null) {
-            throw new EntityNotFoundException("Chat with id " + createMessageRequestDto.chatId() + " not found");
-        }
-
         MessageEntity messageEntity = new MessageEntity();
+        messageEntity.setContent(content);
         messageEntity.setChat(chatEntity);
-        messageEntity.setContent(createMessageRequestDto.content());
+        messageEntity.setRole(SenderType.user);
+        messageEntity.setToolCalls(null);
+        messageEntity.setToolCallId(null);
+
         MessageEntity saved = messagesRepository.save(messageEntity);
 
-        return new CreateMessageResponseDto(
-                saved.getId(),
-                saved.getChat().getId(),
-                saved.getContent()
+        PromptMessage promptMessage = getChatHistory(saved.getChat().getId());
+
+        promptProducer.sendPrompt(promptMessage);
+    };
+
+    @Transactional
+    public MessageEntity createMessageFromAgent(UUID chatId, Message message) {
+        ChatEntity chatEntity = chatRepository.getChatById(chatId);
+        MessageEntity messageEntity = new MessageEntity();
+        messageEntity.setContent(message.content());
+        messageEntity.setChat(chatEntity);
+        messageEntity.setRole(message.role());
+        messageEntity.setToolCallId(message.toolCallId());
+        messageEntity.setToolCalls(message.toolCalls());
+        return messagesRepository.save(messageEntity);
+    }
+
+
+    public PageResponseDto<MessageGetResponseDto> getMessagesByChatId(UUID chatId, int page, int size) {
+        // ... проверка chatEntity ...
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+
+        Specification<MessageEntity> spec = Specification.where((root, query, cb) ->
+                cb.equal(root.get("chat").get("id"), chatId));
+
+        // Добавляем условие WHERE role IN ('user', 'assistant')
+        spec = spec.and((root, query, cb) ->
+                root.get("role").in(SenderType.user, SenderType.assistant));
+
+        Page<MessageEntity> messagesPage = messagesRepository.findAll(spec, pageable);
+
+        Page<MessageGetResponseDto> dtoPage = messagesPage.map(
+                message -> new MessageGetResponseDto(
+                        message.getId(),
+                        message.getChat().getId(),
+                        message.getContent(),
+                        message.getRole()
+                )
+        );
+
+        return new PageResponseDto<>(
+                dtoPage.getContent(),
+                dtoPage.getNumber(),
+                dtoPage.getSize(),
+                dtoPage.getTotalElements(),
+                dtoPage.getTotalPages()
         );
 
     }
 
-    public Page<MessageGetResponseDto> getMessagesByChatId(UUID chatId, int page, int size) {
+    public PromptMessage getChatHistory(UUID chatId) {
         ChatEntity chatEntity = chatRepository.getChatById(chatId);
-
         if (chatEntity == null) {
             throw new EntityNotFoundException("Chat with id " + chatId + " not found");
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+        List<MessageForAgent> messageEntities = messagesRepository.findByChat_IdOrderByCreatedAtAsc(chatId);
 
-        Page<MessageEntity> messagesPage = chatRepository.findAllByIdOrderByUpdatedAt(chatId, pageable);
-
-        return messagesPage.map(
-                message -> new MessageGetResponseDto(
-                        message.getId(),
-                        message.getChat().getId(),
-                        message.getContent()
-                )
+        return new PromptMessage(chatId,
+                messageEntities.stream()
+                        .map(messageForAgent -> new Message(
+                                messageForAgent.getRole(),         // SenderType: USER или AGENT
+                                messageForAgent.getContent(),      // текст сообщения
+                                messageForAgent.getToolCalls(),    // List<ToolCallDto>, если есть
+                                messageForAgent.getToolCallId()   // String, если есть
+                        ))
+                        .toList()
         );
+
     }
 
 }

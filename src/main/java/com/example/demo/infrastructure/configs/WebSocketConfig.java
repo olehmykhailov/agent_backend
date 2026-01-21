@@ -1,4 +1,4 @@
-package com.example.demo.configs;
+package com.example.demo.infrastructure.configs;
 
 import com.example.demo.auth.businesslayer.jwt.JwtHandshakeInterceptor;
 import org.springframework.context.annotation.Configuration;

@@ -1,12 +1,17 @@
 package com.example.demo.chats.businesslayer.controllers;
 
 
+import com.example.demo.amq.services.PromptProducer;
 import com.example.demo.chats.businesslayer.dtos.*;
 import com.example.demo.chats.businesslayer.services.ChatService;
 import com.example.demo.infrastructure.security.SecurityService;
+import com.example.demo.globals.PageResponseDto;
 
+import com.example.demo.messages.businesslayer.dtos.CreateMessageResponseDto;
+import com.example.demo.messages.businesslayer.services.MessageService;
+import com.example.demo.messages.datalayer.enums.SenderType;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,14 +20,11 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/chats")
+@RequiredArgsConstructor
 public class ChatController {
     private final ChatService chatService;
     private final SecurityService securityService;
-
-    public ChatController(ChatService chatService, SecurityService securityService) {
-        this.chatService = chatService;
-        this.securityService = securityService;
-    }
+    private final MessageService messageService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED) // Возвращаем 201 вместо 200
@@ -39,11 +41,20 @@ public class ChatController {
     }
 
     @GetMapping
-    public Page<ChatGetResponseDto> getUserChats(
+    public PageResponseDto<ChatGetResponseDto> getUserChats(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size
     ) {
         UUID currentUserId = securityService.getCurrentUserId();
         return chatService.getUserChats(currentUserId, page, size);
+    }
+
+    @PostMapping("/{chatId}/messages")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void createMessage(
+            @Valid @RequestBody String content,
+            @PathVariable UUID chatId
+    ) {
+        messageService.createMessageFromClient(chatId, content);
     }
 }

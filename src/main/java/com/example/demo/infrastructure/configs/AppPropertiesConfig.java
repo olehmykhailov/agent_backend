@@ -1,4 +1,4 @@
-package com.example.demo.configs;
+package com.example.demo.infrastructure.configs;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;

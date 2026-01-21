@@ -4,7 +4,6 @@ import java.util.UUID;
 
 public record ChatGetResponseDto(
         UUID id,
-        UUID userId,
         String title
 ) {}
 

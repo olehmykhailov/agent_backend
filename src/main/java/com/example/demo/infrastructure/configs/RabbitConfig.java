@@ -1,4 +1,4 @@
-package com.example.demo.configs;
+package com.example.demo.infrastructure.configs;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -12,11 +12,11 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitConfig {
     public static final String PROMPT_QUEUE = "prompt.queue";
     public static final String RESPONSE_QUEUE = "response.queue";
-    public static final String EXCHANGE = "chat.exchange";
+    public static final String CHAT_EXCHANGE = "chat.exchange";
 
     @Bean
-    public DirectExchange directExchange() {
-        return new DirectExchange(EXCHANGE);
+    public DirectExchange directChatExchange() {
+        return new DirectExchange(CHAT_EXCHANGE);
     }
 
     @Bean
@@ -31,12 +31,12 @@ public class RabbitConfig {
 
     @Bean
     public Binding promptBinding() {
-        return BindingBuilder.bind(promptQueue()).to(directExchange()).with("prompt");
+        return BindingBuilder.bind(promptQueue()).to(directChatExchange()).with("prompt");
     }
 
     @Bean
     public Binding responseBinding() {
-        return BindingBuilder.bind(responseQueue()).to(directExchange()).with("response");
+        return BindingBuilder.bind(responseQueue()).to(directChatExchange()).with("response");
     }
 
     @Bean

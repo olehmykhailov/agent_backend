@@ -11,7 +11,6 @@ import java.util.List;
 import com.example.demo.database.BaseEntity;
 import com.example.demo.users.datalayer.entities.UserEntity;
 import com.example.demo.messages.datalayer.entities.MessageEntity;
-import com.example.demo.responses.datalayer.entities.ResponseEntity;
 
 
 @Entity
@@ -29,7 +28,4 @@ public class ChatEntity extends BaseEntity{
 
     @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MessageEntity> messages = new ArrayList<>();
-
-    @OneToMany(mappedBy = "chat", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ResponseEntity> responses = new ArrayList<>();
 }

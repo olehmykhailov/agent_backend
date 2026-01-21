@@ -28,7 +28,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
                     .build()
                     .getQueryParams()
                     .getFirst("token");
-
+            System.out.println(request.getURI());
             System.out.println("Token received: " + (token != null));
 
             if (token == null) {
@@ -37,13 +37,14 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
             }
 
             UUID userId = jwtTokenProvider.getUserIdFromToken(token);
+            System.out.println(userId);
             // ... ваша логика валидации
 
             attributes.put("userId", userId.toString());
             return true;
         } catch (Exception e) {
-            System.err.println("Error in Handshake: " + e.getMessage());
-            e.printStackTrace();
+            //System.err.println("Error in Handshake: " + e.getMessage());
+            //e.printStackTrace();
             return false;
         }
     }

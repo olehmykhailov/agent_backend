@@ -36,7 +36,6 @@ public class AuthController {
 
     @PostMapping("/refresh-token")
     public TokenRefreshResponseDto refreshToken(@RequestBody TokenRefreshRequestDto requestDto) {
-        System.out.println(requestDto.userId());
         return authService.refresh(requestDto);
     }
 }

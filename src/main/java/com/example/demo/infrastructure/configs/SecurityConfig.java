@@ -1,4 +1,4 @@
-package com.example.demo.configs;
+package com.example.demo.infrastructure.configs;
 
 import com.example.demo.auth.businesslayer.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
@@ -31,6 +31,7 @@ public class SecurityConfig {
             throws Exception {
 
         http
+                .cors(cors -> {})
                 .csrf(csrf -> csrf
                         // Игнорируем CSRF для WebSocket эндпоинта
                         .ignoringRequestMatchers("/ws-chat/**")
@@ -41,7 +42,8 @@ public class SecurityConfig {
                                 "/auth/sign-in",
                                 "/auth/sign-up",
                                 "/auth/refresh-token",
-                                "/ws-chat/**"
+                                "/ws-chat/**",
+                                "/vacancies/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

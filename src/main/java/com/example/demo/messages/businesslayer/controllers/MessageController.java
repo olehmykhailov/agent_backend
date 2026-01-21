@@ -2,13 +2,11 @@ package com.example.demo.messages.businesslayer.controllers;
 
 import com.example.demo.messages.businesslayer.dtos.MessageGetResponseDto;
 import com.example.demo.messages.businesslayer.services.MessageService;
+import com.example.demo.globals.PageResponseDto;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -22,7 +20,7 @@ public class MessageController {
     }
 
     @GetMapping("{chatId}")
-    public Page<MessageGetResponseDto> getMessagesByChatId(
+    public PageResponseDto<MessageGetResponseDto> getMessagesByChatId(
             @PathVariable UUID chatId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size

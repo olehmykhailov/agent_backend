@@ -5,9 +5,7 @@ import com.example.demo.auth.businesslayer.dtos.SignInResponseDto;
 import com.example.demo.auth.businesslayer.dtos.TokenRefreshRequestDto;
 import com.example.demo.auth.businesslayer.dtos.TokenRefreshResponseDto;
 import com.example.demo.auth.datalayer.entities.RefreshTokenEntity;
-import com.example.demo.infrastructure.errors.EntityNotFoundException;
-import com.example.demo.infrastructure.errors.UserAlreadyExistsException;
-import com.example.demo.infrastructure.errors.WrongPasswordException;
+import com.example.demo.infrastructure.errors.*;
 import com.example.demo.users.businesslayer.services.UsersService;
 import com.example.demo.users.businesslayer.dtos.CreateUserResponseDto;
 import com.example.demo.users.businesslayer.dtos.CreateUserRequestDto;
@@ -84,7 +82,7 @@ public class AuthService {
                 );
 
         if (tokens.isEmpty()) {
-            throw new EntityNotFoundException("Invalid refresh token");
+            throw new UnauthorizedException("Invalid refresh token");
         }
 
         RefreshTokenEntity token = tokens.stream()
@@ -93,12 +91,12 @@ public class AuthService {
                         t.getTokenHash()
                 ))
                 .findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("Invalid refresh token"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
 
 
         if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
             token.setRevoked(true);
-            throw new RuntimeException("Refresh token expired");
+            throw new UnauthorizedException("Refresh token expired");
         }
 
 

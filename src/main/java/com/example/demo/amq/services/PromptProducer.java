@@ -1,7 +1,7 @@
 package com.example.demo.amq.services;
 
-import com.example.demo.amq.dtos.PromptMessage;
-import com.example.demo.configs.RabbitConfig;
+import com.example.demo.amq.dtos.prompt.PromptMessage;
+import com.example.demo.infrastructure.configs.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
@@ -13,8 +13,9 @@ public class PromptProducer {
     private final RabbitTemplate rabbitTemplate;
 
     public void sendPrompt(PromptMessage message) {
+        System.out.println("Sending Prompt Message" + message);
         rabbitTemplate.convertAndSend(
-                RabbitConfig.EXCHANGE,
+                RabbitConfig.CHAT_EXCHANGE,
                 "prompt",
                 message
         );
