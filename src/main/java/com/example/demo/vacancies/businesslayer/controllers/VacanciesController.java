@@ -20,15 +20,15 @@ public class VacanciesController {
 
     @GetMapping("/{chatId}")
     public PageResponseDto<VacancyGetResponseDto> getVacancies(
-            @PathVariable UUID chatId,
-            @RequestParam int page,
-            @RequestParam int size) {
+            @PathVariable(name = "chatId") UUID chatId,
+            @RequestParam(name = "page") int page,
+            @RequestParam(name = "size") int size) {
         return vacanciesService.getVacancies(chatId, page, size);
     }
 
     @PostMapping("/{chatId}")
     public void createVacancy(
-            @PathVariable UUID chatId,
+            @PathVariable(name = "chatId") UUID chatId,
             @RequestBody List<CreateVacancyRequestDto> createVacancyRequestDtos
     ) {
         vacanciesService.saveVacancies(chatId, createVacancyRequestDtos);

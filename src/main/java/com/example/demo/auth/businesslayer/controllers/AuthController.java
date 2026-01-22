@@ -25,7 +25,6 @@ public class AuthController {
 
     @PostMapping("/sign-in")
     public SignInResponseDto signIn(@RequestBody SignInRequestDto requestDto) {
-
         return authService.signIn(requestDto);
     }
 

@@ -54,7 +54,7 @@ public class ChatController {
     @ResponseStatus(HttpStatus.CREATED)
     public CreateMessageResponseDto createMessage(
             @Valid @RequestBody CreateMessageRequestDto createMessageRequestDto,
-            @PathVariable UUID chatId
+            @PathVariable("chatId") UUID chatId
     ) {
         return messageService.createMessageFromClient(chatId, createMessageRequestDto.content());
     }

@@ -21,9 +21,9 @@ public class MessageController {
 
     @GetMapping("{chatId}")
     public PageResponseDto<MessageGetResponseDto> getMessagesByChatId(
-            @PathVariable UUID chatId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size
+            @PathVariable("chatId") UUID chatId,
+            @RequestParam(defaultValue = "0", name = "page") int page,
+            @RequestParam(defaultValue = "50", name = "size") int size
     ) {
         return messageService.getMessagesByChatId(chatId, page, size);
     }
