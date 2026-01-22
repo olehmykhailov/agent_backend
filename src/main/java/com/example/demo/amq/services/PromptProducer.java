@@ -13,7 +13,6 @@ public class PromptProducer {
     private final RabbitTemplate rabbitTemplate;
 
     public void sendPrompt(PromptMessage message) {
-        System.out.println("Sending Prompt Message" + message);
         rabbitTemplate.convertAndSend(
                 RabbitConfig.CHAT_EXCHANGE,
                 "prompt",

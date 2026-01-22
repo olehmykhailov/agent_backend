@@ -7,6 +7,7 @@ import com.example.demo.chats.businesslayer.services.ChatService;
 import com.example.demo.infrastructure.security.SecurityService;
 import com.example.demo.globals.PageResponseDto;
 
+import com.example.demo.messages.businesslayer.dtos.CreateMessageRequestDto;
 import com.example.demo.messages.businesslayer.dtos.CreateMessageResponseDto;
 import com.example.demo.messages.businesslayer.services.MessageService;
 import com.example.demo.messages.datalayer.enums.SenderType;
@@ -51,10 +52,10 @@ public class ChatController {
 
     @PostMapping("/{chatId}/messages")
     @ResponseStatus(HttpStatus.CREATED)
-    public void createMessage(
-            @Valid @RequestBody String content,
+    public CreateMessageResponseDto createMessage(
+            @Valid @RequestBody CreateMessageRequestDto createMessageRequestDto,
             @PathVariable UUID chatId
     ) {
-        messageService.createMessageFromClient(chatId, content);
+        return messageService.createMessageFromClient(chatId, createMessageRequestDto.content());
     }
 }

@@ -25,6 +25,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -39,14 +40,12 @@ public class AgentResponseConsumer {
     private final ObjectMapper objectMapper;
     private final PromptProducer promptProducer;
 
-
+    @Transactional
     @RabbitListener(queues = RabbitConfig.RESPONSE_QUEUE)
     public void handleResponse(ResponseMessage msg) throws JsonProcessingException {
-        System.out.println(msg);
         if (msg.message() == null) {
             return;
         }
-
         MessageEntity saved = messageService.createMessageFromAgent(msg.chatId(), msg.message());
 
         if (msg.toolFilters() == null && msg.message().toolCalls() == null) {

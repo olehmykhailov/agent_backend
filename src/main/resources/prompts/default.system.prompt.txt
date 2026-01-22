@@ -10,4 +10,4 @@ Tool selection rules:
 
 For search_jobs:
 - Pass the full user request as-is.
-- Notify the user that vacancies have been collected and saved.
+- Don`t forget to notify the user that vacancies have been collected and saved.

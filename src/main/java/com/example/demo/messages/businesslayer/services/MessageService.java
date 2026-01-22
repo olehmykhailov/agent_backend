@@ -2,6 +2,7 @@ package com.example.demo.messages.businesslayer.services;
 
 import com.example.demo.amq.dtos.prompt.PromptMessage;
 import com.example.demo.amq.services.PromptProducer;
+import com.example.demo.messages.businesslayer.dtos.CreateMessageResponseDto;
 import com.example.demo.messages.businesslayer.dtos.Message;
 import com.example.demo.chats.datalayer.entities.ChatEntity;
 import com.example.demo.infrastructure.errors.EntityNotFoundException;
@@ -33,9 +34,9 @@ public class MessageService {
     private final PromptProducer  promptProducer;
 
     @Transactional
-    public void createMessageFromClient(UUID chatId, String content) {
+    public CreateMessageResponseDto createMessageFromClient(UUID chatId, String content) {
         ChatEntity chatEntity = chatRepository.getChatById(chatId);
-
+        System.out.println(content);
         MessageEntity messageEntity = new MessageEntity();
         messageEntity.setContent(content);
         messageEntity.setChat(chatEntity);
@@ -48,6 +49,13 @@ public class MessageService {
         PromptMessage promptMessage = getChatHistory(saved.getChat().getId());
 
         promptProducer.sendPrompt(promptMessage);
+
+        return new CreateMessageResponseDto(
+                saved.getId(),
+                saved.getChat().getId(),
+                saved.getContent(),
+                saved.getRole()
+        );
     };
 
     @Transactional
@@ -74,6 +82,12 @@ public class MessageService {
         // Добавляем условие WHERE role IN ('user', 'assistant')
         spec = spec.and((root, query, cb) ->
                 root.get("role").in(SenderType.user, SenderType.assistant));
+
+        spec = spec.and((root, query, cb) ->
+                cb.isNotNull(root.get("content")));
+
+        spec = spec.and((root, query, cb) ->
+                       cb.notEqual(root.get("content"), ""));
 
         Page<MessageEntity> messagesPage = messagesRepository.findAll(spec, pageable);
 

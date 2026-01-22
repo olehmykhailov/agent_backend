@@ -95,51 +95,73 @@ public class VacanciesService {
         );
     }
 
+    @Transactional(readOnly = true)
     public List<VacancyGetResponseDto> executeAgentCall(UUID chatId, List<ToolFilter> filters) {
         // 1. Проверка чата
         if (!chatRepository.existsById(chatId)) {
             throw new EntityNotFoundException("Chat with id " + chatId + " not found");
         }
+        System.out.println(chatId);
         Specification<VacanciesEntity> spec = (root, query, cb) ->
                 cb.equal(root.get("chat").get("id"), chatId);
 
         // Добавляем динамические фильтры
+
         for (ToolFilter filter : filters) {
-            spec = spec.and(createSpecification(filter));
+            spec = spec.or(createSpecification(filter));
         }
+
 
         return vacanciesRepository.findAll(spec).stream()
                 .map(this::mapToDto)
                 .toList();
     }
 
+    private Object castToType(String value, Class<?> type) {
+        if (value == null || type == String.class) return value;
+        if (type == Float.class || type == float.class) return Float.parseFloat(value);
+        if (type == Double.class || type == double.class) return Double.parseDouble(value);
+        if (type == Integer.class || type == int.class) return Integer.parseInt(value);
+        if (type == Long.class || type == long.class) return Long.parseLong(value);
+        if (type == LocalDate.class) return LocalDate.parse(value);
+        if (type.isEnum()) {
+            return Enum.valueOf((Class<Enum>) type, value);
+        }
+        return value;
+    }
+
     private Specification<VacanciesEntity> createSpecification(ToolFilter filter) {
         return (root, query, cb) -> {
-            // Получаем имя поля из FieldsEnum (например, "minSalary")
             String field = filter.field().getEntityField();
             String val = filter.value();
             LookupsEnum lookup = filter.lookup();
 
-
+            System.out.println(field + " " + val + " "  + lookup);
             if (field.equals("techStack")) {
-                return cb.isMember(val, root.get("techStack"));
+
+                return cb.like(cb.lower(root.join("techStack")), "%" + val.toLowerCase() + "%");
             }
 
+
+            Class<?> fieldType = root.get(field).getJavaType();
+
+            Object castedValue = castToType(val, fieldType);
+
             return switch (lookup) {
-                case eq -> cb.equal(root.get(field), val);
-                case neq -> cb.notEqual(root.get(field), val);
-                case gt -> cb.greaterThan(root.get(field).as(String.class), val);
-                case gte -> cb.greaterThanOrEqualTo(root.get(field).as(String.class), val);
-                case lt -> cb.lessThan(root.get(field).as(String.class), val);
-                case lte -> cb.lessThanOrEqualTo(root.get(field).as(String.class), val);
-                case contains -> cb.like(root.get(field), "%" + val + "%");
-                case icontains -> cb.like(cb.lower(root.get(field)), "%" + val.toLowerCase() + "%");
-                case startswith -> cb.like(root.get(field), val + "%");
-                case istartswith -> cb.like(cb.lower(root.get(field)), val.toLowerCase() + "%");
-                case endswith -> cb.like(root.get(field), "%" + val);
-                case iendswith -> cb.like(cb.lower(root.get(field)), "%" + val.toLowerCase());
+                case eq -> cb.equal(root.get(field), castedValue);
+                case neq -> cb.notEqual(root.get(field), castedValue);
+                case gt -> cb.greaterThan(root.get(field).as((Class<Comparable>) fieldType), (Comparable) castedValue);
+                case gte -> cb.greaterThanOrEqualTo(root.get(field).as((Class<Comparable>) fieldType), (Comparable) castedValue);
+                case lt -> cb.lessThan(root.get(field).as((Class<Comparable>) fieldType), (Comparable) castedValue);
+                case lte -> cb.lessThanOrEqualTo(root.get(field).as((Class<Comparable>) fieldType), (Comparable) castedValue);
+                case contains, icontains -> {
+                    if (fieldType != String.class) yield cb.conjunction();
+                    String cleanedVal = val.trim().toLowerCase();
+                    String pattern = "%" + cleanedVal + "%";
+                    yield cb.like(cb.lower(root.get(field)), pattern);
+                }
                 case isnull -> cb.isNull(root.get(field));
-                default -> cb.conjunction(); // "Пустое" условие (1=1)
+                default -> cb.conjunction();
             };
         };
     }
