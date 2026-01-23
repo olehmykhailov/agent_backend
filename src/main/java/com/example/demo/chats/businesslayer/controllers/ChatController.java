@@ -28,7 +28,7 @@ public class ChatController {
     private final MessageService messageService;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED) // Возвращаем 201 вместо 200
+    @ResponseStatus(HttpStatus.CREATED)
     public CreateChatResponseDto createChat(@Valid @RequestBody CreateChatRequestDto createChatRequestDto) {
         return chatService.createChat();
     }
@@ -42,8 +42,8 @@ public class ChatController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public PageResponseDto<ChatGetResponseDto> getUserChats(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size
+            @RequestParam(defaultValue = "0", name = "page") int page,
+            @RequestParam(defaultValue = "50", name = "size") int size
     ) {
         UUID currentUserId = securityService.getCurrentUserId();
         return chatService.getUserChats(currentUserId, page, size);
