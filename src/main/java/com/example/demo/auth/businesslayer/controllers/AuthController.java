@@ -7,33 +7,32 @@ import com.example.demo.auth.businesslayer.dtos.TokenRefreshRequestDto;
 import com.example.demo.auth.businesslayer.dtos.TokenRefreshResponseDto;
 import com.example.demo.users.businesslayer.dtos.CreateUserRequestDto;
 import com.example.demo.users.businesslayer.dtos.CreateUserResponseDto;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.demo.auth.businesslayer.services.AuthService;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
 
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
-
     @PostMapping("/sign-in")
+    @ResponseStatus(HttpStatus.CREATED)
     public SignInResponseDto signIn(@RequestBody SignInRequestDto requestDto) {
         return authService.signIn(requestDto);
     }
 
     @PostMapping("/sign-up")
+    @ResponseStatus(HttpStatus.CREATED)
     public CreateUserResponseDto createUser(@RequestBody CreateUserRequestDto requestDto) {
         return authService.signUp(requestDto);
     }
 
     @PostMapping("/refresh-token")
+    @ResponseStatus(HttpStatus.CREATED)
     public TokenRefreshResponseDto refreshToken(@RequestBody TokenRefreshRequestDto requestDto) {
         return authService.refresh(requestDto);
     }

@@ -4,22 +4,21 @@ import com.example.demo.messages.businesslayer.dtos.MessageGetResponseDto;
 import com.example.demo.messages.businesslayer.services.MessageService;
 import com.example.demo.globals.PageResponseDto;
 
-import org.springframework.data.domain.Page;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/messages")
+@RequiredArgsConstructor
 public class MessageController {
 
     private final MessageService messageService;
 
-    public MessageController(MessageService messageService) {
-        this.messageService = messageService;
-    }
-
     @GetMapping("{chatId}")
+    @ResponseStatus(HttpStatus.OK)
     public PageResponseDto<MessageGetResponseDto> getMessagesByChatId(
             @PathVariable("chatId") UUID chatId,
             @RequestParam(defaultValue = "0", name = "page") int page,

@@ -7,6 +7,7 @@ import com.example.demo.globals.PageResponseDto;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class VacanciesController {
     private final VacanciesService vacanciesService;
 
     @GetMapping("/{chatId}")
+    @ResponseStatus(HttpStatus.OK)
     public PageResponseDto<VacancyGetResponseDto> getVacancies(
             @PathVariable(name = "chatId") UUID chatId,
             @RequestParam(name = "page") int page,
@@ -27,6 +29,7 @@ public class VacanciesController {
     }
 
     @PostMapping("/{chatId}")
+    @ResponseStatus(HttpStatus.CREATED)
     public void createVacancy(
             @PathVariable(name = "chatId") UUID chatId,
             @RequestBody List<CreateVacancyRequestDto> createVacancyRequestDtos
