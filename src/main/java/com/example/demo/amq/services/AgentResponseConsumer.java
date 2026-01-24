@@ -48,7 +48,10 @@ public class AgentResponseConsumer {
         }
         MessageEntity saved = messageService.createMessageFromAgent(msg.chatId(), msg.message());
 
-        if (msg.toolFilters() == null && msg.message().toolCalls() == null) {
+        boolean hasToolFilters = msg.toolFilters() != null && !msg.toolFilters().isEmpty();
+        boolean hasToolCalls = msg.message().toolCalls() != null && !msg.message().toolCalls().isEmpty();
+
+        if (!hasToolFilters && !hasToolCalls) {
             messagingTemplate.convertAndSend(
                     "/topic/chat/" + msg.chatId(),
                     new MessageGetResponseDto(
@@ -61,17 +64,19 @@ public class AgentResponseConsumer {
 
         } else {
             String content = null;
-            for (ToolCallDto toolCall : msg.message().toolCalls()) {
-                if (toolCall.function().name().equals("build_job_filters")) {
-                    List<VacancyGetResponseDto> vacancies = vacanciesService.executeAgentCall(msg.chatId(), msg.toolFilters());
-                    content = objectMapper.writeValueAsString(vacancies);
+            if (msg.message().toolCalls() != null) {
+                for (ToolCallDto toolCall : msg.message().toolCalls()) {
+                    if (toolCall.function().name().equals("build_job_filters")) {
+                        List<VacancyGetResponseDto> vacancies = vacanciesService.executeAgentCall(msg.chatId(), msg.toolFilters());
+                        content = objectMapper.writeValueAsString(vacancies);
+                    }
+                    messageService.createMessageFromAgent(msg.chatId(), new Message(
+                            SenderType.tool,
+                            content,
+                            null,
+                            toolCall.id()
+                    ));
                 }
-                messageService.createMessageFromAgent(msg.chatId(), new Message(
-                        SenderType.tool,
-                        content,
-                        null,
-                        toolCall.id()
-                ));
             }
             promptProducer.sendPrompt(messageService.getChatHistory(msg.chatId()));
         }
