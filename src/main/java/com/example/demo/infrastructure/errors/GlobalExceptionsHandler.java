@@ -18,7 +18,6 @@ public class GlobalExceptionsHandler {
         return new ResponseEntity<>(error, ex.getStatus());
     }
 
-    // 2. Ловим системные ошибки (500), чтобы не "плеваться" стек-трейсом в клиента
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleEverything(Exception ex) {
         ErrorResponse error = new ErrorResponse(
@@ -26,7 +25,6 @@ public class GlobalExceptionsHandler {
                 "Произошла внутренняя ошибка сервера",
                 LocalDateTime.now()
         );
-        // Здесь можно добавить логгер: log.error(ex.getMessage(), ex);
         ex.printStackTrace();
         return ResponseEntity.status(500).body(error);
     }
