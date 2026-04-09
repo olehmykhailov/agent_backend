@@ -22,7 +22,7 @@ public class GlobalExceptionsHandler {
     public ResponseEntity<ErrorResponse> handleEverything(Exception ex) {
         ErrorResponse error = new ErrorResponse(
                 500,
-                "Произошла внутренняя ошибка сервера",
+                "Internal Server Error occured",
                 LocalDateTime.now()
         );
         ex.printStackTrace();
