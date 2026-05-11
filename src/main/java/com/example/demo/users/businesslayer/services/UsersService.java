@@ -11,14 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
-@Service // Регистрирует класс как Бин в контексте Spring
-@RequiredArgsConstructor // Создает конструктор для всех final-полей (Dependency Injection)
+@Service
+@RequiredArgsConstructor
 public class UsersService {
 
-    // final гарантирует, что зависимость будет передана через конструктор
     private final UserRepository userRepository;
 
-    // Метод для получения пользователя
     public UserEntity getUserById(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
@@ -33,7 +31,7 @@ public class UsersService {
         return userRepository.existsByEmail(email);
     }
 
-    @Transactional // Оборачивает метод в транзакцию БД
+    @Transactional
     public UserEntity createUser(CreateUserRequestDto createUserRequestDto, String encodedPassword) {
         UserEntity userEntity = new UserEntity();
 
